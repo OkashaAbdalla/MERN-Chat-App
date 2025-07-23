@@ -24,3 +24,6 @@ function AuthSkeleton({title, text}) {
 }
 
 export default AuthSkeleton;
+
+//connect the frontend to the backend such that zustand can help you get data from you backend
+ 

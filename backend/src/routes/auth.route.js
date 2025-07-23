@@ -1,6 +1,6 @@
 // Import required packages
 import express from 'express';
-import { checkAuth, signin, signout, signup } from '../controllers/auth.controllers.js';
+import { checkAuth, signin, signout, signup  } from '../controllers/auth.controllers.js';
 
 import bcrypt from 'bcryptjs';
 import User from '../models/user.model.js';
@@ -9,6 +9,16 @@ import auth from '../middleware/auth.middleware.js';
 
 // Create router
 const router = express.Router();
+
+router.post('/sign-up', signup);
+
+router.post('/sign-in', signin);
+
+router.get('/sign-out', auth, signout);
+
+router.get('/check', auth, checkAuth);
+
+
 
 // Sign-up route - POST /api/auth/signup
 router.post('/signup', async (req, res) => {
@@ -308,16 +318,8 @@ router.put('/profile', auth, async (req, res) => {
 
 
  // Import the user controller
-const authRouter = express.Router();
-
-authRouter.post('/sign-up', signup);
-
-authRouter.post('/sign-in', signin);
-
-authRouter.get('/sign-out', auth, signout);
-
-authRouter.get('/check', auth, checkAuth);
 
 
 
-export default authRouter;
+
+export default router;

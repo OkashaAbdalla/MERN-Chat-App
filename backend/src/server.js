@@ -48,10 +48,7 @@ mongoose.connect(process.env.MONGODB_URI, {
     console.error('❌ MongoDB connection error:', error);
 });
 
-
-app.get('/', (req, res)=> {
-    res.send('Chat server is running');
-});
+ 
 
 
  // Use the authRouter for authentication routes{
