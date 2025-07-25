@@ -1,6 +1,6 @@
 // Import required packages
 import express from 'express';
-import { checkAuth, signin, signout, signup  } from '../controllers/auth.controllers.js';
+import { checkAuth,  signup  } from '../controllers/auth.controllers.js';
 
 import bcrypt from 'bcryptjs';
 import User from '../models/user.model.js';
@@ -12,9 +12,6 @@ const router = express.Router();
 
 router.post('/sign-up', signup);
 
-router.post('/sign-in', signin);
-
-router.get('/sign-out', auth, signout);
 
 router.get('/check', auth, checkAuth);
 
@@ -89,7 +86,7 @@ router.post('/signup', async (req, res) => {
 });
 
 // Login route - POST /api/auth/login
-router.post('/signin', async (req, res) => {
+router.post('/login', async (req, res) => {
   try {
     // Get login data from request
     const { email, password } = req.body;
@@ -155,7 +152,7 @@ router.post('/signin', async (req, res) => {
 });
 
 // Logout route - POST /api/auth/logout
-router.post('/signout', auth, async (req, res) => {
+router.post('/logout', auth, async (req, res) => {
   try {
     // Update user's online status to false
     await User.findByIdAndUpdate(req.user._id, {
