@@ -8,7 +8,6 @@ const generateJWT = (userId, res) => {
     { expiresIn: '24h' }          // Token expires in 24 hours
   );
   
-  console.log(`JWT generated for user ID: ${userId}`);  
   // Set token as HTTP-only cookie
   res.cookie('jwt', token, {
     maxAge: 24 * 60 * 60 * 1000,  // 24 hours in milliseconds

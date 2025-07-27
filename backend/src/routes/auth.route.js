@@ -1,23 +1,17 @@
 // Import required packages
 import express from 'express';
-import { checkAuth,  signup  } from '../controllers/auth.controllers.js';
-
 import bcrypt from 'bcryptjs';
 import User from '../models/user.model.js';
 import generateJWT from '../utils/generateJWT.js';
-import auth from '../middleware/auth.middleware.js';
+import auth from '../middleware/auth.middleware.js'
+import { checkAuth, signIn, SignOut, signUp, changePassword, deleteAccount, updateSettings } from '../controllers/auth.controllers.js';
+import cloudinary from '../lib/cloudinary.js';
+
+
 
 // Create router
 const router = express.Router();
 
-router.post('/sign-up', signup);
-
-
-router.get('/check', auth, checkAuth);
-
-
-
-// Sign-up route - POST /api/auth/signup
 router.post('/signup', async (req, res) => {
   try {
     // Get user data from request body
@@ -86,6 +80,13 @@ router.post('/signup', async (req, res) => {
 });
 
 // Login route - POST /api/auth/login
+router.post('/sign-in', signIn);
+
+router.get('/sign-out', auth, SignOut);
+
+router.get('/check', auth, checkAuth);
+
+// Login route - POST /api/auth/login
 router.post('/login', async (req, res) => {
   try {
     // Get login data from request
@@ -130,7 +131,7 @@ router.post('/login', async (req, res) => {
     // Send success response
     res.status(200).json({
       success: true,
-      message: 'sigin successful',
+      message: 'Login successful',
       token: token,
       user: {
         id: user._id,
@@ -142,7 +143,7 @@ router.post('/login', async (req, res) => {
     });
     
   } catch (error) {
-    console.error('signin error:', error);
+    console.error('Login error:', error);
     res.status(500).json({
       success: false,
       message: 'Server error during login',
@@ -195,7 +196,6 @@ router.get('/me', auth, async (req, res) => {
         avatar: req.user.avatar,
         isOnline: req.user.isOnline,
         createdAt: req.user.createdAt
-        
       }
     });
     
@@ -209,29 +209,45 @@ router.get('/me', auth, async (req, res) => {
   }
 });
 
+// Add this after router.get('/me', ...)
+router.get('/users', auth, async (req, res) => {
+  try {
+    const users = await User.find({ _id: { $ne: req.user._id } }).select('id username avatar isOnline');
+    res.status(200).json({ success: true, users });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Failed to fetch users', error: error.message });
+  }
+});
+
 // Update profile route - PUT /api/auth/profile
 router.put('/profile', auth, async (req, res) => {
   try {
     // Get update data from request
-    const { username, email, avatar, country, city, houseAddress, relationshipStatus, dateOfBirth } = req.body;
-    
+    const { username, email, avatar, city, relationshipStatus, bio, location, dateOfBirth } = req.body;
 
-    
+
     // Prepare update object (only include provided fields)
     const updateData = {};
     if (username) updateData.username = username;
     if (email) updateData.email = email;
-    if (avatar) updateData.avatar = avatar;
-    if (country) updateData.country = country;
     if (city) updateData.city = city;
-    if (houseAddress) updateData.houseAddress;
-
     if (relationshipStatus) updateData.relationshipStatus = relationshipStatus;
+    if (bio) updateData.bio = bio;
+    if (location) updateData.location = location;
     if (dateOfBirth) updateData.dateOfBirth = dateOfBirth;
-    if(isOnline) updateData.isOnline
+
+    if (avatar) {
+
+     const imageUploadRes = await cloudinary.uploader.upload(avatar)
+
+     const avatarUrl = imageUploadRes.secure_url
+      updateData.avatar = avatarUrl;
+    }
 
 
-    
+
+   
+
     // Check if username or email is being changed to one that already exists
     if (username || email) {
       const existingUser = await User.findOne({
@@ -270,14 +286,12 @@ router.put('/profile', auth, async (req, res) => {
         username: updatedUser.username,
         email: updatedUser.email,
         avatar: updatedUser.avatar,
-        country: updatedUser.country,
+        isOnline: updatedUser.isOnline,
         city: updatedUser.city,
-        houseAddress: updatedUser.houseAddress.houseAddress,
         relationshipStatus: updatedUser.relationshipStatus,
-        dateOfBirth: updatedUser.dateOfBirth,
-        
-
-        isOnline: updatedUser.isOnline
+        bio: updatedUser.bio,
+        location: updatedUser.location,
+        dateOfBirth: updatedUser.dateOfBirth
       }
     });
     
@@ -309,14 +323,14 @@ router.put('/profile', auth, async (req, res) => {
   }
 });
 
+// Change password route - PUT /api/auth/change-password
+router.put('/change-password', auth, changePassword);
+
+// Delete account route - DELETE /api/auth/delete-account
+router.delete('/delete-account', auth, deleteAccount);
+
+// Update settings route - PUT /api/auth/settings
+router.put('/settings', auth, updateSettings);
+
 // Export the router
-
-
-
-
- // Import the user controller
-
-
-
-
 export default router;

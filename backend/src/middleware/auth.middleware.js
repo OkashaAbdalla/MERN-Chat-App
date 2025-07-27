@@ -1,7 +1,6 @@
 // Import required packages
 import jwt from 'jsonwebtoken';
-
-import userModel  from '../models/user.model.js';
+import User from '../models/user.model.js';
 
 // Authentication middleware function
 const auth = async (req, res, next) => {
@@ -21,10 +20,9 @@ const auth = async (req, res, next) => {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     
     // Find user by ID from token
-    const user = await userModel.findById(decoded.userId).select('-password');
+    const user = await User.findById(decoded.userId).select('-password');
     
-    
-    // Check if user exists
+    // Check if user still exists
     if (!user) {
       return res.status(401).json({
         success: false,

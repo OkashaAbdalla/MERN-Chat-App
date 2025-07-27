@@ -24,47 +24,70 @@ const userSchema = new mongoose.Schema({
   },
   avatar: {
     type: String,
-    default: 'https://via.placeholder.com/150/4A90E2/FFFFFF?text=user'
+    default: 'https://via.placeholder.com/150/4A90E2/FFFFFF?text=User'
   },
-
-  
   isOnline: {
     type: Boolean,       // true or false
     default: false       // New users start offline
   },
-
-
-    country: {
-      type: String,
-      default: ''
-    },
-    city: {
-      type: String,
-      default: ''
-    },
-    houseAddress:{
-      type: String,
-      default: ''
-    },
-
- relationshipStatus: {
+  city: {
     type: String,
-    enum: ['single', 'in a relationship', 'married', 'complicated', 'prefer not to say'],
-    default: 'single'
+    default: 'Unknown'   // Default value if not provided
   },
-
-  // ✅ Date of birth
+  relationshipStatus: {
+    type: String,
+    // enum: ['Single', 'In a relationship', 'Married', 'Divorced', 'Widowed'],
+    // default: 'Single'    // Default value if not provided
+  },
+  bio: {
+    type: String,        // Bio can be text
+    default: ''          // Default is empty string
+  },
+  location: {
+    type: String,         // Location can be a string
+    default: 'Unknown'    // Default value if not provided
+  },
   dateOfBirth: {
-    type: Date,
-
-  }
-
-},
-
-{
+    type: Date,          // Date of birth can be a date
+    default: null        // Default is null if not provided
+  },
+  settings: {
+    theme: {
+      type: String,
+      enum: ['light', 'dark', 'system'],
+      default: 'light'
+    },
+    notifications: {
+      type: Boolean,
+      default: true
+    },
+    soundEnabled: {
+      type: Boolean,
+      default: true
+    },
+    language: {
+      type: String,
+      default: 'en'
+    },
+    privacy: {
+      type: String,
+      enum: ['everyone', 'friends', 'nobody'],
+      default: 'friends'
+    },
+    showOnlineStatus: {
+      type: Boolean,
+      default: true
+    },
+    autoDeleteMessages: {
+      type: String,
+      enum: ['never', '7days', '30days', '90days'],
+      default: 'never'
+    }
+  },
+}, {
   timestamps: true       // Automatically adds createdAt and updatedAt
 });
 
 // Create and export the User model
-const userModel = mongoose.model('user', userSchema);
+const userModel = mongoose.model('User', userSchema);
 export default userModel;

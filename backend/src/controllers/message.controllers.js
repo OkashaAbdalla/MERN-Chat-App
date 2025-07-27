@@ -5,11 +5,11 @@ import userModel from "../models/user.model.js";
 export const sendMessage = async (req, res) => {
   try {
     // Get data from request
-    const { receiverId, text, image } = req.body;
+    const { receiverId, text, imageUrl } = req.body;
     const senderId = req.user._id; // From auth middleware
     
     // Validate that we have either text or image
-    if (!text && !image) {
+    if (!text && !imageUrl) {
       return res.status(400).json({
         success: false,
         message: "Message must contain either text or image"
@@ -38,7 +38,7 @@ export const sendMessage = async (req, res) => {
       senderId,
       receiverId,
       text: text?.trim(),
-      image
+      imageUrl
     });
     
     // Save message to database
@@ -66,7 +66,8 @@ export const sendMessage = async (req, res) => {
 };
 
 
-// Get messages between two users
+
+//get message
 export const getMessages = async (req, res) => {
   try {
     const { userId } = req.params; // The other user's ID
@@ -125,7 +126,50 @@ export const getMessages = async (req, res) => {
   }
 };
 
-// Get all users that current user has chatted with (for sidebar)
+// Delete a message (only sender can delete)
+export const deleteMessage = async (req, res) => {
+  try {
+    const { messageId } = req.params;
+    const userId = req.user._id;
+    
+    // Find the message
+    const message = await messageModel.findById(messageId);
+    
+    if (!message) {
+      return res.status(404).json({
+        success: false,
+        message: "Message not found"
+      });
+    }
+    
+    // Check if current user is the sender
+    if (message.senderId.toString() !== userId.toString()) {
+      return res.status(403).json({
+        success: false,
+        message: "You can only delete your own messages"
+      });
+    }
+    
+    // Delete the message
+    await messageModel.findByIdAndDelete(messageId);
+    
+    res.status(200).json({
+      success: true,
+      message: "Message deleted successfully",
+      data: { deletedMessageId: messageId }
+    });
+    
+  } catch (error) {
+    console.error("Delete message error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Server error deleting message",
+      error: error.message
+    });
+  }
+};
+
+//Get conversations for the current user
 export const getConversations = async (req, res) => {
   try {
     const myId = req.user._id;
@@ -174,51 +218,6 @@ export const getConversations = async (req, res) => {
 };
 
 
-
-
-
-// Delete a message (only sender can delete)
-export const deleteMessage = async (req, res) => {
-  try {
-    const { messageId } = req.params;
-    const userId = req.user._id;
-    
-    // Find the message
-    const message = await messageModel.findById(messageId);
-    
-    if (!message) {
-      return res.status(404).json({
-        success: false,
-        message: "Message not found"
-      });
-    }
-    
-    // Check if current user is the sender
-    if (message.senderId.toString() !== userId.toString()) {
-      return res.status(403).json({
-        success: false,
-        message: "You can only delete your own messages"
-      });
-    }
-    
-    // Delete the message
-    await messageModel.findByIdAndDelete(messageId);
-    
-    res.status(200).json({
-      success: true,
-      message: "Message deleted successfully",
-      data: { deletedMessageId: messageId }
-    });
-    
-  } catch (error) {
-    console.error("Delete message error:", error);
-    res.status(500).json({
-      success: false,
-      message: "Server error deleting message",
-      error: error.message
-    });
-  }
-};
 
 // Get single message details
 export const getMessage = async (req, res) => {

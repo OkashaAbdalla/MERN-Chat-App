@@ -1,76 +1,52 @@
+// Import required packages
 import express from 'express';
-import connectDB from './lib/db.js';
-import authRouter from './routes/auth.route.js';
-import cors from "cors"
+import mongoose from 'mongoose';
+import cors from 'cors';
 import cookieParser from 'cookie-parser';
-import mongoose  from 'mongoose';
 import dotenv from 'dotenv';
 import messageRouter from './routes/message.route.js';
+import connectDB from './lib/db.js';
+import authRoutes from './routes/auth.route.js';
 
-
-
-
-// Load environment variables from .env file
+// Load environment variables
 dotenv.config();
 
+// Create Express application
 const app = express();
 
-// Middleware - code that runs before our routes
-app.use(express.json()); // Allows server to understand JSON data
- // Parses cookies attached to the client request object
-app.use(cookieParser()); // Parses cookies attached to the client request object
+// Middleware
+app.use(express.json());
+app.use(cookieParser());
 
 // ✅ Updated CORS configuration
-const allowedOrigins = [
-  'http://localhost:3000',
-  'http://localhost:5173',
-  'http://192.168.56.1:3000'
-];
-
 app.use(cors({
-  origin: function (origin, callback) {
-    if (!origin || allowedOrigins.includes(origin)) {
-      callback(null, true);
-    } else {
-      callback(new Error('Not allowed by CORS'));
-    }
-  },
+  origin: ['http://localhost:3001', 'http://192.168.56.1:3001', 'http://localhost:5173'],
   credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'Cookie']
 }));
-app.get('/', (req, res) => {
-    res.send('API is running...');
-});
 
-
-app.use('/api/auth', authRouter);
-app.use('/api/message', messageRouter); // Use the message router for message routes
-
-
-
-
+// Get port from environment or use 5000
 const PORT = process.env.PORT || 5000;
 
-// Connect to MongoDB
-mongoose.connect(process.env.MONGODB_URI, {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
-}).then(() => {
-    console.log('Connected to MongoDB');    
-}).catch((error) => {
-    console.error('❌ MongoDB connection error:', error);
+// Connect to MongoDB database
+mongoose.connect(process.env.MONGODB_URI)
+  .then(() => {
+    console.log('✅ Connected to MongoDB database');
+  })
+  .catch((error) => {
+    console.error('❌ Database connection error:', error);
+  });
+
+// Routes
+app.use('/api/messages', messageRouter);
+app.use('/api/auth', authRoutes);
+
+app.get('/', (req, res) => {
+  res.send('Chat Server is Running and Connected to Database!');
 });
 
- 
-
-
- // Use the authRouter for authentication routes{
-
-
-
-
+// Start the server
 app.listen(PORT, () => {
-    console.log(`🚀server is running on ${PORT}` );
-    connectDB();
+  console.log(`🚀 Server running on http://localhost:${PORT}`);
 });
-
-//y$D0D;XgC2JQ@*5pZcxm4$8k[U&6UA,
