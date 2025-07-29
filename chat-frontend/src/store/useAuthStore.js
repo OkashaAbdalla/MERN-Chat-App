@@ -20,9 +20,9 @@ export const useAuthStore = create((set) => ({
   checkAuth: async () => {
     try {
       const res = await api.get('/auth/check');
-      set({ authUser: res.data });
+      set({ authUser: res.data?.user || res.data || null });
     } catch (error) {
-      console.log('Error in checkAuth:', error);
+      console.error('Error in checkAuth:', error);
       set({ authUser: null });
     } finally {
       set({ isCheckingAuth: false });
@@ -33,12 +33,12 @@ export const useAuthStore = create((set) => ({
     set({ isSigningUp: true });
     try {
       const res = await api.post('/auth/signup', data);
-      set({ authUser: res.data.user }); // Set authUser after signup
+      set({ authUser: res.data?.user });
       toast.success('Account created successfully');
-      return true; // ⬅️ Inform component of success
+      return true;
     } catch (error) {
       toast.error(error.response?.data?.message || 'Signup failed');
-      return false; // ⬅️ Inform component of failure
+      return false;
     } finally {
       set({ isSigningUp: false });
     }
@@ -48,10 +48,12 @@ export const useAuthStore = create((set) => ({
     set({ isLoggingIn: true });
     try {
       const res = await api.post('/auth/login', data);
-      set({ authUser: res.data });
+      set({ authUser: res.data?.user || res.data });
       toast.success('Logged in successfully');
+      return true;
     } catch (error) {
       toast.error(error.response?.data?.message || 'Login failed');
+      return false;
     } finally {
       set({ isLoggingIn: false });
     }
@@ -70,18 +72,17 @@ export const useAuthStore = create((set) => ({
   updateProfile: async (data) => {
     set({ isUpdatingProfile: true });
     try {
-      // Convert profilePic to avatar if it exists
       const updateData = { ...data };
       if (data.profilePic) {
         updateData.avatar = data.profilePic;
         delete updateData.profilePic;
       }
-      
+
       const res = await api.put('/auth/profile', updateData);
-      set({ authUser: res.data.user });
+      set({ authUser: res.data?.user });
       toast.success('Profile updated successfully');
     } catch (error) {
-      console.log('Error in updateProfile:', error);
+      console.error('Error in updateProfile:', error);
       toast.error(error.response?.data?.message || 'Profile update failed');
     } finally {
       set({ isUpdatingProfile: false });
@@ -118,7 +119,7 @@ export const useAuthStore = create((set) => ({
   updateSettings: async (settings) => {
     try {
       const res = await api.put('/auth/settings', { settings });
-      set({ authUser: res.data.user });
+      set({ authUser: res.data?.user });
       toast.success('Settings updated successfully');
       return true;
     } catch (error) {

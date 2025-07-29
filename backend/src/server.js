@@ -20,7 +20,7 @@ app.use(cookieParser());
 
 // ✅ Updated CORS configuration
 app.use(cors({
-  origin: ['http://localhost:3001', 'http://192.168.56.1:3001', 'http://localhost:5173'],
+  origin: ['http://localhost:3000', 'http://192.168.56.1:3000 ', 'http://localhost:5173'],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'Cookie']

@@ -6,7 +6,7 @@ import generateJWT from '../utils/generateJWT.js';
 import auth from '../middleware/auth.middleware.js'
 import { checkAuth, signIn, SignOut, signUp, changePassword, deleteAccount, updateSettings } from '../controllers/auth.controllers.js';
 import cloudinary from '../lib/cloudinary.js';
-
+import messageModel from '../models/message.model.js';
 
 
 // Create router
@@ -212,10 +212,64 @@ router.get('/me', auth, async (req, res) => {
 // Add this after router.get('/me', ...)
 router.get('/users', auth, async (req, res) => {
   try {
-    const users = await User.find({ _id: { $ne: req.user._id } }).select('id username avatar isOnline');
+    // Get users with whom the current user has conversations
+    const conversations = await messageModel.find({
+      $or: [
+        { senderId: req.user._id },
+        { receiverId: req.user._id }
+      ]
+    }).populate('senderId', 'username avatar isOnline').populate('receiverId', 'username avatar isOnline');
+
+    // Create a Set to store unique user IDs (to avoid duplicates)
+    const userIds = new Set();
+    
+    // Go through all messages and collect the other user's ID
+    conversations.forEach(message => {
+      if (message.senderId._id.toString() === req.user._id.toString()) {
+        // If I sent the message, add the receiver
+        userIds.add(message.receiverId._id.toString());
+      } else {
+        // If I received the message, add the sender
+        userIds.add(message.senderId._id.toString());
+      }
+    });
+    
+    // Convert Set to Array and get full user details
+    const userIdsArray = Array.from(userIds);
+    const users = await User.find({
+      _id: { $in: userIdsArray }
+    }).select('username avatar isOnline');
+    
     res.status(200).json({ success: true, users });
   } catch (error) {
     res.status(500).json({ success: false, message: 'Failed to fetch users', error: error.message });
+  }
+});
+
+// Search users endpoint
+router.get('/search-users', auth, async (req, res) => {
+  try {
+    const { query } = req.query;
+    
+    if (!query || query.trim().length < 2) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Search query must be at least 2 characters long' 
+      });
+    }
+
+    const users = await User.find({
+      _id: { $ne: req.user._id }, // Exclude current user
+      username: { $regex: query, $options: 'i' } // Case-insensitive search
+    }).select('username avatar isOnline').limit(10); // Limit results
+
+    res.status(200).json({ success: true, users });
+  } catch (error) {
+    res.status(500).json({ 
+      success: false, 
+      message: 'Failed to search users', 
+      error: error.message 
+    });
   }
 });
 
